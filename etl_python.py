@@ -1,88 +1,83 @@
 import csv
 
-def read_csv_case_1(file):
-    f = open(file, 'r', encoding='utf-8')
-
-    leitor = csv.reader(f, delimiter=";", lineterminator="\n")
-
-    data = []
-
-    for linha in leitor:
-        data.append(linha)
-
-    f.close()
-
-    return data
-
-
-def read_csv_case_2(file):
-
+def read_csv(file):
     with open(file, 'r', encoding='utf-8') as f:
-
-        data = [linha for linha in csv.reader(f, delimiter=';', lineterminator='\n')]
-
-    return data
+        return [linha for linha in csv.reader(f, delimiter=';', lineterminator='\n')]
 
 
-def read_data(data):
+def print_data(data):
     for row in data:
         print(row)
 
-# transformar colunas para os tipos corretos:
 
-def tranform_data(data,specific_columns,type):
-    lista_index = list()
+def transform_data(data, columns):
+    col_indices = [data[0].index(col) for col in columns.keys()]
 
-    for coluna in data[0]:
-        if coluna in specific_columns:
-            lista_index.append(data[0].index(coluna))
-
-    if type == 'float':
-        for linha in range(len(data)):
-            for index in lista_index:
-                if (linha != 0):
-                    data[linha][index] = float(data[linha][index])
-
-    if type == 'int':
-        for linha in range(len(data)):
-            for index in lista_index:
-                if (linha != 0):
-                    data[linha][index] = int(data[linha][index])
+    for row in data[1:]:
+        for index in col_indices:
+            row[index] = columns[data[0][index]](row[index])
 
     return data
 
-def media_notes_students(data,specific_columns_notes,media_column_name):
 
-    index_coluna_notas = [data[0].index(index_coluna) for index_coluna in specific_columns_notes]
+def add_media_column(data, columns, new_col_name):
 
-    data[0].append(media_column_name)
+    col_indices = [data[0].index(col) for col in columns]
+    data[0].append(new_col_name)
 
-    for i,linha in enumerate(data):
-        if(i >= 1):
-            soma = sum([linha[indice] for indice in index_coluna_notas])
-            media = soma / len(index_coluna_notas)
-            data[i].append(media)
+    for row in data[1:]:
+        media = sum(row[index] for index in col_indices) / len(col_indices)
+        row.append(media)
 
     return data
-    
+
+
+def add_absences_column(data, columns, new_col_name, max_frequency):
+
+    col_index = data[0].index(columns)
+    data[0].append(new_col_name)
+
+    for row in data[1:]:
+        absences = max_frequency - row[col_index]
+        row.append(absences)
+
+    return data
+
+
+def add_approval_status(data, media_col, absences_col, new_col_name, max_absences, min_media):
+
+    media_index = data[0].index(media_col)
+    absences_index = data[0].index(absences_col)
+    data[0].append(new_col_name)
+
+    for row in data[1:]:
+        approved = row[media_index] >= min_media and row[absences_index] <= max_absences
+        row.append('Aprovado' if approved else 'Reprovado')
+
+    return data
+
 
 def main():
     file = 'data/alunos.csv'
-    specific_columns_float = ['Prova_1', 'Prova_2', 'Prova_3', 'Prova_4']
-    specific_columns_int = ['RA', 'Frequencia']
-    specific_columns_notes = ['Prova_1', 'Prova_2', 'Prova_3', 'Prova_4']
-    media_column_name = 'Média'
 
-    data = read_csv_case_2(file)
-    read_data(data)
+    columns_transform = {'Prova_1': float, 'Prova_2': float, 'Prova_3': float, 'Prova_4': float, 'RA': int, 'Frequencia': int}
+    columns_notes = ['Prova_1', 'Prova_2', 'Prova_3', 'Prova_4']
+    frequency_col = 'Frequencia'
+    media_col = 'Média'
+    absences_col = 'Faltas'
+    approval_col = 'Status Aprovação'
+    max_frequency = 20
+    max_absences = 5
+    min_media = 7
 
-    data = tranform_data(data,specific_columns_float,'float')
-    data = tranform_data(data,specific_columns_int,'int')
-    media_notes_students(data,specific_columns_notes,media_column_name)
+    data = read_csv(file)
+    data = transform_data(data, columns_transform)
+    data = add_media_column(data, columns_notes, media_col)
 
+    data = add_absences_column(data, frequency_col, absences_col, max_frequency)
+    data = add_approval_status(data, media_col, absences_col, approval_col, max_absences, min_media)
 
-    read_data(data)
-
+    print_data(data)
 
 
 if __name__ == '__main__':
