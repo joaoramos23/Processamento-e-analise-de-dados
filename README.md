@@ -1,5 +1,8 @@
 # Processamento e análise de dados
 Neste projeto, procurei ao máximo não utilizar bibliotecas externas do Python para realizar o ETL. Na parte de tratamento de dados, utilizei apenas a lógica do próprio Python, criando assim um desafio maior.
+
+Para utilizar o código, copie os dados abaixo em um arquivo CSV e altere o nome do arquivo na variável file presente na função main().
+
 # Dados csv:
 
 ```
