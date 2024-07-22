@@ -1,4 +1,5 @@
 import csv
+from openpyxl import Workbook
 
 def read_csv(file):
     with open(file, 'r', encoding='utf-8') as f:
@@ -56,10 +57,20 @@ def add_approval_status(data, media_col, absences_col, new_col_name, max_absence
 
     return data
 
+def save_to_xlsx(data, file):
+    wb = Workbook()
+    ws = wb.active
+    
+    for row in data:
+        ws.append(row)
+    
+    wb.save(file)
+
 
 def main():
     file = 'data/alunos.csv'
-
+    output_file = 'alunos_editados.xlsx'
+    
     columns_transform = {'Prova_1': float, 'Prova_2': float, 'Prova_3': float, 'Prova_4': float, 'RA': int, 'Frequencia': int}
     columns_notes = ['Prova_1', 'Prova_2', 'Prova_3', 'Prova_4']
     frequency_col = 'Frequencia'
@@ -73,12 +84,11 @@ def main():
     data = read_csv(file)
     data = transform_data(data, columns_transform)
     data = add_media_column(data, columns_notes, media_col)
-
     data = add_absences_column(data, frequency_col, absences_col, max_frequency)
     data = add_approval_status(data, media_col, absences_col, approval_col, max_absences, min_media)
 
-    print_data(data)
-
+    save_to_xlsx(data, output_file)
+    print(f"Os dados foram transformados e salvos em {output_file}")
 
 if __name__ == '__main__':
     main()
